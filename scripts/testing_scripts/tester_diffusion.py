@@ -73,36 +73,43 @@ def test_sr_ddpm(model_version, test='shepp-logan'):
                                           reg_type='l1')
 
     elif test == 'widefield':
-        data = np.load('./teaser_c_w_test.npz')
-        XTest = norm_01(data['w_img'][..., 19:20]) * 2 - 1
-        YTest = norm_01(data['c_img'][..., 19:20]) * 2 - 1
-
+        data = np.load('./data/teaser_c_w_test.npz')
+        XTest = np.expand_dims(data['w_img'][..., 19:20],0)
+        YTest = np.expand_dims(data['c_img'][..., 19:20],0)
         objects = np.zeros_like(XTest)
+        reg = 'l1'
+        r_weight = 0.015
+        e_weight = 1
         for idx in range(XTest.shape[0]):
-            fx = norm_01(XTest[idx:idx + 1, :, :, slice_idx:slice_idx + 1]) * 2 - 1
-            fy = norm_01(YTest[idx:idx + 1, :, :, slice_idx:slice_idx + 1]) * 2 - 1
-            if np.amax(fy) >= 0:
-                pred_fy = ddpm_obtain_sr_img(fx, timesteps_test, p_model_pinn, inf_type='lang', smooth_factor=0.015,
-                                             reg_type='l1')
-                plot_imgs(pred_fy, pred_fy, fy, fx, test, model_type=model_type, step=idx)
-                objects[idx, :, :, 0] = pred_fy[0, :, :, 0] + fx[0,:,:,0]
+            fx = XTest[idx:idx + 1]
+            fy = YTest[idx:idx + 1]
+            if np.amax(fy) >= 0.2:
+                print(np.amax(fy), np.amin(fy), idx)
+                fx = norm_01(fx) * 2 - 1
+                fy = norm_01(fy) * 2 - 1
+                t = time.time()
+                pred_dfy_pinn = ddpm_obtain_sr_img(fx, timesteps_test, p_model_pinn, inf_type='lang',
+                                                   smooth_factor=r_weight, nu_lr=e_weight, reg_type=reg)
+                objects[idx, :, :, 0] = pred_dfy_pinn[0, :, :, 0] + fx[0, :, :, 0]
+                plt.imsave('./teaser_wf.png', np.squeeze(prctile_norm(pred_dfy_pinn + fx, min_prc=12)), cmap='gray')
 
-        np.savez('./imgs_output/testing/reconstructions_widefield.npz', recon=objects)
+        np.savez('./imgs_output/' + model_type + '_testing/reconstructions_widefield.npz', recon_pinn=objects)
 
 
     elif test == 'confocal':
         data = np.load('./teaser_c_w_test.npz')
 
-        XTest = data['c_img']
-        YTest = data['c_img']
+        XTest = np.expand_dims(data['c_img'],0)
+        YTest = np.expand_dims(data['c_img'],0)
         objects = np.zeros_like(XTest)
         for idx in range(0, XTest.shape[0]):
-            for slice_idx in range(14, 21):
+            for slice_idx in range(19, 20):
                 fx = norm_01(XTest[idx:idx + 1, :, :, slice_idx:slice_idx + 1]) * 2 - 1
                 fy = norm_01(YTest[idx:idx + 1, :, :, slice_idx:slice_idx + 1]) * 2 - 1
                 if np.amax(norm_01(YTest[..., 19:20])[idx:idx + 1] * 2 - 1) >= 0:
-                    pred_fy = ddpm_obtain_sr_img(fx, timesteps_test, p_model_pinn, smooth_factor=0.015)
+                    pred_fy = ddpm_obtain_sr_img(fx, timesteps_test, p_model_pinn, smooth_factor=0.015, nu_lr = 1., reg_type='l1')
                     objects[idx, :, :, slice_idx] = pred_fy[0, :, :, 0] + fx[0, :, :, 0]
+                    plt.imsave(f'./teaser_confocal_{slice_idx}.png', np.squeeze(prctile_norm(pred_dfy_pinn + fx, min_prc=12)), cmap='gray')
 
         np.savez('./imgs_output/testing/reconstructions_confocal.npz', recon=objects)
 
