@@ -1,3 +1,4 @@
+
 # Physics Informed Denoising Diffusion Probabilistic Model
 
 
@@ -39,3 +40,16 @@ python test_diffusion.py
 2.  You can change the regularization type and strength in the parameters of the function. 
 3. The provided teaser file has some widefield samples and some confocal samples you can run the model on both to see the differences.
 4. The output images will be saved in `./imgs_output/testing/reconstructions_confocal.npz` for the confocal teaser and `./imgs_output/testing/reconstructions_widefield.npz` for the widefield images. 
+5. The inference should take 23.07s in a computer with i9-7900x cpu, and a RTX 3090 TI for each modality. 
+
+
+## Results
+After training the model you should see the following reconstructed images.
+## Widefield
+
+![plot](./teaser_wf.png)
+
+
+## Confocal
+
+![plot](./teaser_confocal_19.png)
