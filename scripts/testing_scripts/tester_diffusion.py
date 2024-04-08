@@ -108,6 +108,3 @@ def test_sr_ddpm(model_version, test='shepp-logan'):
 
 
 
-
-
-test_sr_ddpm(900000, test='imagenet')
