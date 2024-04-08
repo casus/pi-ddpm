@@ -87,7 +87,7 @@ def test_sr_ddpm(model_version, test='shepp-logan'):
                 plot_imgs(pred_fy, pred_fy, fy, fx, test, model_type=model_type, step=idx)
                 objects[idx, :, :, 0] = pred_fy[0, :, :, 0] + fx[0,:,:,0]
 
-        np.savez('./imgs_output/' + model_type + '_testing/reconstructions_widefield.npz', recon=objects)
+        np.savez('./imgs_output/testing/reconstructions_widefield.npz', recon=objects)
 
 
     elif test == 'confocal':
@@ -104,7 +104,7 @@ def test_sr_ddpm(model_version, test='shepp-logan'):
                     pred_fy = ddpm_obtain_sr_img(fx, timesteps_test, p_model_pinn, smooth_factor=0.015)
                     objects[idx, :, :, slice_idx] = pred_fy[0, :, :, 0] + fx[0, :, :, 0]
 
-        np.savez('./imgs_output/' + model_type + '_testing/reconstructions_confocal.npz', recon=objects)
+        np.savez('./imgs_output/testing/reconstructions_confocal.npz', recon=objects)
 
 
 
