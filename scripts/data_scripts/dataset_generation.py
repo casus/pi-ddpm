@@ -6,12 +6,17 @@ from tqdm import tqdm
 import cupy as cp
 import tifffile as tif
 import cv2
-
+import os
+from pathlib import Path
+from skimage.util.shape import view_as_blocks
+from skimage.util import montage
+from einops import rearrange
 from scipy.ndimage import shift
 import h5py
+import tensorflow as tf
+import matplotlib.pyplot as plt
 
-
-# os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
+#os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
 
 
 def disk_kernel(radius):
@@ -90,9 +95,6 @@ def generate_binary_metaballs_3d(shape=(32, 32, 32), n_balls=4, radius_range=(0.
     binary_cpu = binary.get()  # transfer data back to host
 
     return binary_cpu
-
-
-from pathlib import Path
 
 
 def add_low_frequency_noise(img_gray, freq_range):
@@ -243,7 +245,7 @@ def generate_training_set(n_samples, n_batches, sample_shape, kernel_shape, path
 def norm_01(x):
     if (np.amax(x) - np.amin(x)) != 0:
         n_x = (x - np.amin(x, axis=(1, 2, 3), keepdims=True)) / (
-                    np.amax(x, axis=(1, 2, 3), keepdims=True) - np.amin(x, axis=(1, 2, 3), keepdims=True))
+                np.amax(x, axis=(1, 2, 3), keepdims=True) - np.amin(x, axis=(1, 2, 3), keepdims=True))
     else:
         n_x = 0
     return n_x
@@ -271,4 +273,42 @@ def generate_biosr_dataset(base_path):
     np.savez('./data/biosr_ds.npz', x=XTrain, y=YTrain)
 
 
+def generate_w2s_dataset(base_path, p_size=256):
+    parent_path_blurry = base_path + '/raw/'
+    subfolders = [f.path for f in os.scandir(parent_path_blurry) if f.is_dir()]
+    XTrain = []
+    YTrain = []
+    for idx in tqdm(range(30)):
+        subfolder = subfolders[idx]
+        sim_0 = np.expand_dims(rearrange(view_as_blocks(np.load(f'{subfolder}/sim_channel0.npy'), (p_size, p_size)),
+                                         'p q h w -> (p q) h w'), -1)
+        sim_1 = np.expand_dims(rearrange(view_as_blocks(np.load(f'{subfolder}/sim_channel1.npy'), (p_size, p_size)),
+                                         'p q h w -> (p q) h w'), -1)
+        sim_2 = np.expand_dims(rearrange(view_as_blocks(np.load(f'{subfolder}/sim_channel2.npy'), (p_size, p_size)),
+                                         'p q h w -> (p q) h w'), -1)
 
+        wf_0 = np.expand_dims(
+            rearrange(view_as_blocks(np.load(f'{subfolder}/wf_channel0.npy'), (400, p_size // 2, p_size // 2)),
+                      't p q r h w -> (t p q) r  h w'), -1)
+        wf_1 = np.expand_dims(
+            rearrange(view_as_blocks(np.load(f'{subfolder}/wf_channel1.npy'), (400, p_size // 2, p_size // 2)),
+                      't p q r h w -> (t p q) r h w'), -1)
+        wf_2 = np.expand_dims(
+            rearrange(view_as_blocks(np.load(f'{subfolder}/wf_channel2.npy'), (400, p_size // 2, p_size // 2)),
+                      't p q r h w -> (t p q) r h w'), -1)
+
+
+        YTrain.append(sim_0)
+        YTrain.append(sim_1)
+        YTrain.append(sim_2)
+        XTrain.append(wf_0)
+        XTrain.append(wf_1)
+        XTrain.append(wf_2)
+
+    XTrain = np.array(XTrain)
+    YTrain = np.array(YTrain)
+
+    np.savez('/media/gabriel/data_hdd/w2s_test.npz', x=XTrain, y=YTrain)
+
+
+#generate_w2s_dataset('/media/gabriel/data_hdd/W2S_raw')

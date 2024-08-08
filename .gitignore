@@ -1,0 +1,16 @@
+*.h5
+*.png
+*/__pycache__/
+/.idea/
+*.jpg
+*.svg
+*.pdf
+plot_figs.py
+__pycache__/
+imgs_output/
+scripts/data_scripts/__pycache__/
+scripts/testing_scripts/tester_diffusion.py
+scripts/training_scripts/
+src/models/__pycache__/
+src/training_utils/__pycache__/
+./idea

@@ -5,7 +5,6 @@ import tensorflow.keras.backend as K
 from tensorflow_addons.layers import InstanceNormalization
 
 
-
 def tile_gamma(x):
     gamma = x[0]
     noisy_y = x[1]
@@ -17,7 +16,6 @@ def tile_embedding(x):
     noisy_inp = x[1]
 
     return tf.ones_like(noisy_inp) * tf.expand_dims(tf.expand_dims(emb, axis=-1), axis=-1)
-
 
 def UNet_ddpm(
         shape,
@@ -85,7 +83,9 @@ def UNet_ddpm(
         512,
         2,
         activation='softplus',
-        padding='same')(UpSampling2D((2, 2))(gamma_vec))
+        padding='same')(
+        Conv2DTranspose(512, 3, activation='softplus', padding='same', strides=2)(
+            gamma_vec))
 
     merge6 = Concatenate()([conv4, up6])
     conv6 = Conv2D(512, 3, activation='softplus', padding='same')(merge6)
@@ -97,7 +97,9 @@ def UNet_ddpm(
         256,
         2,
         activation='softplus',
-        padding='same')(UpSampling2D((2, 2))(conv6))
+        padding='same')(
+        Conv2DTranspose(256, 3, activation='softplus', padding='same', strides=2)(
+            conv6))
     merge7 = Concatenate()([conv3, up7])
     conv7 = Conv2D(256, 3, activation='softplus', padding='same')(merge7)
     conv7 = InstanceNormalization()(conv7)
@@ -108,18 +110,20 @@ def UNet_ddpm(
         128,
         2,
         activation='softplus',
-        padding='same')(UpSampling2D((2, 2))(conv7))
+        padding='same')(
+        Conv2DTranspose(128, 3, activation='softplus', padding='same', strides=2)(
+            conv7))
     merge8 = Concatenate()([conv2, up8])
     conv8 = Conv2D(128, 3, activation='softplus', padding='same')(merge8)
     conv8 = InstanceNormalization()(conv8)
     conv8 = Conv2D(128, 3, activation='softplus', padding='same')(conv8)
     conv8 = InstanceNormalization()(conv8)
-
     up9 = Conv2D(
         64,
         2,
         activation='softplus',
-        padding='same')(UpSampling2D((2, 2))(conv8))
+        padding='same')(
+        Conv2DTranspose(64, 3, activation='softplus', padding='same', strides=2)(conv8))
 
     merge9 = Concatenate()([conv1, up9])
     conv9 = Conv2D(64, 3, activation='softplus', padding='same')(merge9)
@@ -128,7 +132,7 @@ def UNet_ddpm(
     conv9 = InstanceNormalization()(conv9)
     conv9 = Conv2D(32, 3, activation='softplus', padding='same')(conv9)
     conv9 = InstanceNormalization()(conv9)
-    conv10 = Conv2D(out_filters, 1, activation='linear')(conv9)
+    conv10 = Conv2D(out_filters, 1, activation='linear', padding='same')(conv9)
     if full_model and noise_input:
         out = Add()([inputs, conv10])
         model = Model([noise_in, inputs], out)
@@ -218,4 +222,3 @@ def UNet(shape, out_channels=3, inputs=None):
     model = Model(inputs, conv10)
 
     return model
-
