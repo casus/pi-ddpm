@@ -175,7 +175,7 @@ def generate_synthetic_sample(shape_img, shape_kernel, numerical_aperture, refra
         p_img = np.mean(img_gray, axis=0)
 
         psf = shift(psf, (focal_plane_shift, 0, 0))
-        psf = np.mean(np.log(np.abs(psf + 1)), axis=0)
+        psf = np.mean(psf, axis=0)
         psf_w = shift(psf_w, (focal_plane_shift, 0, 0))
         psf_w = np.mean(psf_w, axis=0)
         syn_sample = fftconvolve(psf, p_img, 'same')
