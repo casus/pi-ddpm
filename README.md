@@ -4,6 +4,23 @@
 
 This is the implementation of the PI-DDPM network using a basic UNet architecture as backbone.
 
+## How to cite us
+
+Li, R., Della Maggiora, G., Andriasyan, V., Petkidis, A., Yushkevich, A., Deshpande, N., ... & Yakimovich, A. (2024). Microscopy image reconstruction with physics-informed denoising diffusion probabilistic model. Communications Engineering, 3(1), 186.
+
+```
+@article{li2024microscopy,
+  title={Microscopy image reconstruction with physics-informed denoising diffusion probabilistic model},
+  author={Li, Rui and Della Maggiora, Gabriel and Andriasyan, Vardan and Petkidis, Anthony and Yushkevich, Artsemi and Deshpande, Nikita and Kudryashev, Mikhail and Yakimovich, Artur},
+  journal={Communications Engineering},
+  volume={3},
+  number={1},
+  pages={186},
+  year={2024},
+  publisher={Nature Publishing Group UK London}
+}
+```
+
 ## System Requirements
 
 
